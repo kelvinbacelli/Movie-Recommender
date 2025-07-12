@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-
+import sys
+from flask import Flask, request, render_template_string
 
 #Load the data
 ratings = pd.read_csv("ml-100k/u.data",sep='\t',header=None,names=
@@ -87,7 +88,67 @@ def recommend_movies(movie_title, ratings_matrix, top_n):
     return movie_lst
 
 
-print(recommend_movies("Pulp Fiction (1994)",user_movie_matrix,5))
-print(recommend_movies("Star Wars (1977)",user_movie_matrix,5))
-print(recommend_movies("Jurassic Park (1993)",user_movie_matrix,5))
+# Check if at least one argument is provided
+# if len(sys.argv) > 1:
+#     input_arg = sys.argv[1]  # First command-line argument
+#     print(f"Input argument: {input_arg}")
+#     print(recommend_movies(input_arg,user_movie_matrix,5))
+# else:
+#     print("No command-line argument provided.")
 
+print(recommend_movies("Pulp Fiction (1994)",user_movie_matrix,5))
+#print(recommend_movies("Star Wars (1977)",user_movie_matrix,5))
+#print(recommend_movies("Jurassic Park (1993)",user_movie_matrix,5))
+
+
+
+### Run Flask Server for Web GUI
+
+# app = Flask(__name__)
+
+# # HTML template for the input form and output display
+# HTML_TEMPLATE = """
+# <!DOCTYPE html>
+# <html>
+# <head>
+#     <title>Simple Input Processor</title>
+#     <style>
+#         body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+#         .container { text-align: center; }
+#         input[type="text"] { padding: 8px; width: 200px; }
+#         input[type="submit"] { padding: 8px 16px; margin-left: 10px; }
+#         .output { margin-top: 20px; }
+#     </style>
+# </head>
+# <body>
+#     <div class="container">
+#         <h1>Input Processor</h1>
+#         <form method="POST" action="/">
+#             <input type="text" name="user_input" placeholder="Enter your input" required>
+#             <input type="submit" value="Submit">
+#         </form>
+#         {% if output %}
+#             <div class="output">
+#                 <h3>Output:</h3>
+#                 <p>{{ output }}</p>
+#             </div>
+#         {% endif %}
+#     </div>
+# </body>
+# </html>
+# """
+
+# @app.route('/', methods=['GET', 'POST'])
+# def index():
+#     output = None
+#     if request.method == 'POST':
+#         user_input = request.form.get('user_input')
+#         try:
+#             output = recommend_movies(user_input,user_movie_matrix,5)
+            
+#         except Exception as e:
+#             output = user_input
+#     return render_template_string(HTML_TEMPLATE, output=output)
+
+# if __name__ == '__main__':
+#     app.run(debug=True)
