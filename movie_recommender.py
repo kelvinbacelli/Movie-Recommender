@@ -6,14 +6,20 @@ import numpy as np
 ratings = pd.read_csv("ml-100k/u.data",sep='\t',header=None,names=
 ["user_id", "movie_id", "rating", "timestamp"])
 
-movies = pd.read_csv("ml-100k/u.item", sep='|', header=None, encoding='latin-1',
-
-names=["movie_id", "title", "release_date", "video_release_date", "IMDb_URL",
+movies = pd.read_csv("ml-100k/u.item", sep='|', header=None, encoding='latin-1',names=["movie_id", "title", "release_date", "video_release_date", "IMDb_URL",
 "unknown", "Action", "Adventure", "Animation", "Children's", "Comedy", "Crime",
 "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "Musical", "Mystery",
 "Romance", "Sci-Fi", "Thriller", "War", "Western"])
 
+genre_cols = ["unknown", "Action", "Adventure", "Animation", "Children's", "Comedy", "Crime",
+              "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "Musical",
+              "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western"]
 
+def combine_genres(row):
+    return '|'.join([g for g in genre_cols if row[g] == 1])
+
+
+movies['genres'] = movies.apply(combine_genres, axis=1)
 #Merge both datasets on movie_id since that's the common column/row values between each one
 merged = pd.merge(ratings,movies,on='movie_id')
 
@@ -40,10 +46,12 @@ def cosine_similarity(v1,v2):
     return (dot_product)/(magnitude_v1 * magnitude_v2)
 
 
-
-
 #function to recommend top N similar movies
 def recommend_movies(movie_title, ratings_matrix, top_n):
+
+    genres = movies.loc[movies['title'] == movie_title,'genres'].iloc[0]
+
+    genres_set = set(genres.split('|'))
     #if user movie input not in matrix, return error message
     if movie_title not in ratings_matrix.columns:
         return "Movie not found in data"
@@ -62,12 +70,16 @@ def recommend_movies(movie_title, ratings_matrix, top_n):
         movie_rating = ratings_matrix[col]
         #get rid of Na rating values
         common_ratings = pd.concat([movie_column_vector,movie_rating],axis=1).dropna()
+
+        other_genres = movies.loc[movies['title']==col,'genres'].iloc[0]
+        other_genres_set = set(other_genres.split('|'))
         
         #compute similarity between user movie input column vector and every other movie title vector
-        if not common_ratings.empty and len(common_ratings)>=20:
-            similarity = cosine_similarity(common_ratings.iloc[:,0],common_ratings.iloc[:,1])
-            #store movie titles with similarity value in dictionary
-            similarity_dict[col] = similarity
+        if genres_set.intersection(other_genres_set):
+            if not common_ratings.empty and len(common_ratings)>=20:
+                similarity = cosine_similarity(common_ratings.iloc[:,0],common_ratings.iloc[:,1])
+                #store movie titles with similarity value in dictionary
+                similarity_dict[col] = similarity
         #print(f"{col}: {len(common_ratings)} users in common")
 
     
